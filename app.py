@@ -32,8 +32,8 @@ import pickle
 def load_pipeline():
     try:
         filename = 'modeloCV.pkl'
-        pipeline = modelTree,variables,labelencoder,min_max_scaler = pickle.load(open(filename, 'rb'))
-        pipeline
+        modelTree,variables,labelencoder,min_max_scaler = pickle.load(open(filename, 'rb'))
+        
     except FileNotFoundError:
         st.error(f"Error: No se encontró el archivo del pipeline en '{filename}'.")
         st.stop()
@@ -42,8 +42,6 @@ def load_pipeline():
         st.stop()
 
 # Cargamos los recursos (Modelo, lista de columnas de X_train, LabelEncoder, MinMaxScaler)
-modelTree, variables, labelencoder, min_max_scaler = load_pipeline()
-
 # --- DEFINICIÓN DE INTERFAZ GRÁFICA ---
 
 st.title('Predicción de Estado Físico del Cultivo')
