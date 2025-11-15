@@ -18,6 +18,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import pickle
+filename = 'modeloCV.pkl'
+modelTree,variables,labelencoder,min_max_scaler = pickle.load(open(filename, 'rb'))
+
 #Recorda documentar esto para poder ejecutar streamlit
 #data = pd.read_csv("datos_futuros.csv")
 #data.head()
