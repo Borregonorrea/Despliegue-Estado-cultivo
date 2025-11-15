@@ -123,11 +123,12 @@ if st.button('Predecir Estado Físico del Cultivo'):
         # ... (Resto de la lógica de predicción y display)
         pred_encoded = modelTree.predict(X_predict)
         pred_decoded = labelencoder.inverse_transform(pred_encoded)
+        pred_final = labelencoder.inverse_transform(pred_decoded)
 
         st.success('✅ Predicción Exitosa')
         st.metric(
             label="Estado Físico Predicho",
-            value=f"El cultivo se encuentra en estado: **{pred_decoded}**"
+            value=f"El cultivo se encuentra en estado: **{pred_final}**"
         )
 
     except Exception as e:
