@@ -32,18 +32,8 @@ import numpy as np
 import pickle
 
 # --- CONFIGURACIÓN Y CARGA DE RECURSOS ---
-
-def load_pipeline():
-    try:
-        filename = 'modeloCV.pkl'
-        modelTree,variables,labelencoder,min_max_scaler = pickle.load(open(filename, 'rb'))
-        
-    except FileNotFoundError:
-        st.error(f"Error: No se encontró el archivo del pipeline en '{filename}'.")
-        st.stop()
-    except Exception as e:
-        st.error(f"Error al cargar el pipeline (pickle): {e}")
-        st.stop()
+filename = 'modeloCV.pkl'
+modelTree,variables,labelencoder,min_max_scaler = pickle.load(open(filename, 'rb'))
 
 # Cargamos los recursos (Modelo, lista de columnas de X_train, LabelEncoder, MinMaxScaler)
 # --- DEFINICIÓN DE INTERFAZ GRÁFICA ---
