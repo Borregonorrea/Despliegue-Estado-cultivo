@@ -18,11 +18,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import pickle
-filename = 'modeloCV.pkl'
-pipeline = modelTree,variables,labelencoder,min_max_scaler = pickle.load(open(filename, 'rb'))
-pipeline
-
 #Recorda documentar esto para poder ejecutar streamlit
 #data = pd.read_csv("datos_futuros.csv")
 #data.head()
@@ -34,18 +29,13 @@ import pickle
 
 # --- CONFIGURACIÓN Y CARGA DE RECURSOS ---
 
-PICKLE_FILE = 'modeloCV.pkl'
-
-@st.cache_resource
 def load_pipeline():
     try:
-        with open(PICKLE_FILE, 'rb') as file:
-            # Cargamos los 4 elementos: modelo, lista de variables (columnas), LE, MinMaxScaler
-            modelTree, variables, labelencoder, min_max_scaler = pickle.load(file)
-
-        return modelTree, variables, labelencoder, min_max_scaler
+        filename = 'modeloCV.pkl'
+        pipeline = modelTree,variables,labelencoder,min_max_scaler = pickle.load(open(filename, 'rb'))
+        pipeline
     except FileNotFoundError:
-        st.error(f"Error: No se encontró el archivo del pipeline en '{PICKLE_FILE}'.")
+        st.error(f"Error: No se encontró el archivo del pipeline en '{filename}'.")
         st.stop()
     except Exception as e:
         st.error(f"Error al cargar el pipeline (pickle): {e}")
