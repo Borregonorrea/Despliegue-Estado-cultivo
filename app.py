@@ -92,18 +92,15 @@ if st.button('Predecir Estado Físico del Cultivo'):
 
         # B. Aplicar el MinMaxScaler guardado a las columnas numéricas
         # ¡Esta línea ya no dará error de nombres!
-        data_num_scaled = min_max_scaler.transform(data_num)
-        data_num_scaled = pd.DataFrame(data_num_scaled, columns=num_cols, index=data_input.index)
-
         # C. Aplicación explícita de Dummies (OHE) y el resto de la lógica...
         data_cat_ohe = pd.get_dummies(data_cat, columns=cat_cols, drop_first=False)
 
         # D. Combinación y Alineación
-        data_preparada = pd.concat([data_num_scaled, data_cat_ohe], axis=1)
-        X_predict = data_preparada.reindex(columns=variables, fill_value=0)
+        data_preparada = pd.concat([data_num, data_cat_ohe], axis=1)
+        data_preparada = data_preparada.reindex(columns=variables, fill_value=0)
 
         # ... (Resto de la lógica de predicción y display)
-        pred_encoded = modelTree.predict(X_predict)
+        pred_encoded = modelTree.predict(data_preparada)
         pred_decoded = labelencoder.inverse_transform(pred_encoded)
         pred_final = labelencoder.inverse_transform(pred_decoded)
 
