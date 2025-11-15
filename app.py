@@ -27,101 +27,71 @@ pipeline
 #data = pd.read_csv("datos_futuros.csv")
 #data.head()
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import pickle
-
-# --- CONFIGURACIÓN Y CARGA DE RECURSOS ---
-
-PICKLE_FILE = 'modeloCV.pkl'
-
-@st.cache_resource
-def load_pipeline():
-    try:
-        with open(PICKLE_FILE, 'rb') as file:
-            # Cargamos los 4 elementos: modelo, lista de variables (columnas), LE, MinMaxScaler
-            modelTree, variables, labelencoder, min_max_scaler = pickle.load(file)
-
-        return modelTree, variables, labelencoder, min_max_scaler
-    except FileNotFoundError:
-        st.error(f"Error: No se encontró el archivo del pipeline en '{PICKLE_FILE}'.")
-        st.stop()
-    except Exception as e:
-        st.error(f"Error al cargar el pipeline (pickle): {e}")
-        st.stop()
-
-# Cargamos los recursos (Modelo, lista de columnas de X_train, LabelEncoder, MinMaxScaler)
-modelTree, variables, labelencoder, min_max_scaler = load_pipeline()
-
-# --- DEFINICIÓN DE INTERFAZ GRÁFICA ---
-
-st.title('Predicción de Estado Físico del Cultivo')
-st.markdown("---")
-
-# 1. Inputs Numéricos
-areaSembrada = st.slider('Area Sembrada(ha)', min_value=0, max_value=1000, value=20, step=1)
-areaCosechada = st.slider('AREA COSECHADA(ha)', min_value=0, max_value=350, value=20, step=1)
-produccion = st.slider('PRODUCCION(t)', min_value=0, max_value=3500, value=20, step=1)
-rendimiento = st.slider('RENDIMIENTO(t/ha)', min_value=0.0, max_value=10.0, value=5.0, step=0.1)
-
-# 2. Inputs Categóricos
-cultivo = st.selectbox('CULTIVO', ["Aguacate demAs variedades", "MaIz Tradicional", "Frijol", "'LimOn Pajarito"])
-cicloCultivo = st.selectbox('CICLO CULTIVO', ["Permanente", "Transitorio"])
-grupoCultivo = st.selectbox('GRUPO CULTIVO', ["Frutales", "Cereales","Leguminosas"])
-subGrupo = st.selectbox('SUBGRUPO', ["Demas frutales", "Cereales","Leguminosas", "CItricos"])
-nombreCientifico = st.selectbox('NOMBRE CIENTIFICO CULTIVO', ["Persea americana", "Zea mays","Phaseolus sp", "Citrus limon L."])
-
 # --- LÓGICA DE PREDICCIÓN CON BOTÓN ---
 
 if st.button('Predecir Estado Físico del Cultivo'):
-
-    # 3. Crear DataFrame con los datos capturados
+    
+    # 3. Crear DataFrame con los datos capturados (¡CORRECCIÓN APLICADA AQUÍ!)
     datos = [[areaSembrada, areaCosechada, produccion, rendimiento, cultivo, cicloCultivo, grupoCultivo, subGrupo, nombreCientifico]]
-    data_input = pd.DataFrame(datos, columns=['Area Sembrada(ha)', 'AREA COSECHADA(ha)', 'PRODUCCION(t)', 'RENDIMIENTO(t/ha)', 'CULTIVO', 'CICLO CULTIVO', 'GRUPO CULTIVO','SUBGRUPO','NOMBRE CIENTIFICO CULTIVO'])
+    
+    # MODIFICACIÓN: Se añaden comillas simples a las columnas numéricas donde el scaler las espera
+    input_cols_corrected = [
+        "'Area Sembrada(ha)'", 
+        "'AREA COSECHADA(ha)'", 
+        'PRODUCCION(t)', 
+        'RENDIMIENTO(t/ha)', 
+        'CULTIVO', 
+        'CICLO CULTIVO', 
+        'GRUPO CULTIVO',
+        'SUBGRUPO',
+        'NOMBRE CIENTIFICO CULTIVO'
+    ]
+    data_input = pd.DataFrame(datos, columns=input_cols_corrected)
 
     # 4. Pre-procesamiento (OHE y Reindex)
     try:
-        # A. Definir columnas
-        num_cols = ['Area Sembrada(ha)', 'AREA COSECHADA(ha)', 'PRODUCCION(t)', 'RENDIMIENTO(t/ha)']
+        # A. Definir columnas (¡CORRECCIÓN APLICADA AQUÍ!)
+        # MODIFICACIÓN: num_cols debe tener las comillas
+        num_cols = [
+            "'Area Sembrada(ha)'", 
+            "'AREA COSECHADA(ha)'", 
+            'PRODUCCION(t)', 
+            'RENDIMIENTO(t/ha)'
+        ]
         cat_cols = ['CULTIVO', 'CICLO CULTIVO', 'GRUPO CULTIVO', 'SUBGRUPO', 'NOMBRE CIENTIFICO CULTIVO']
-
-        data_num = data_input[num_cols]
+        
+        data_num = data_input[num_cols] # Ahora selecciona las columnas con comillas
         data_cat = data_input[cat_cols]
 
         # B. Aplicar el MinMaxScaler guardado a las columnas numéricas
-        data_num_scaled = min_max_scaler.transform(data_num)
+        # ¡Esta línea ya no dará error de nombres!
+        data_num_scaled = min_max_scaler.transform(data_num) 
         data_num_scaled = pd.DataFrame(data_num_scaled, columns=num_cols, index=data_input.index)
 
-        # C. 📢 APLICACIÓN EXPLÍCITA DE DUMMIES (ONE-HOT ENCODING)
-        # Se aplica OHE a las variables categóricas sin eliminar la primera columna (drop_first=False)
-        data_cat_ohe = pd.get_dummies(data_cat, columns=cat_cols, drop_first=False)
-
-        # D. COMBINACIÓN Y ALINEACIÓN DE COLUMNAS (PASO CRÍTICO RESUELTO)
-
-        # 1. Combinar numéricas escaladas y categóricas OHE
+        # C. Aplicación explícita de Dummies (OHE) y el resto de la lógica...
+        data_cat_ohe = pd.get_dummies(data_cat, columns=cat_cols, drop_first=False) 
+        
+        # D. Combinación y Alineación
         data_preparada = pd.concat([data_num_scaled, data_cat_ohe], axis=1)
-
-        # 2. 📢 ALINEACIÓN FINAL con .reindex()
-        # Se utiliza la lista 'variables' (columnas de X_train) para ordenar y añadir las columnas faltantes (fill_value=0)
         X_predict = data_preparada.reindex(columns=variables, fill_value=0)
-
-        # 5. Predicción
-        pred_encoded = modelTree.predict(X_predict)
-
-        # 6. Inversión del LabelEncoder
+        
+        # ... (Resto de la lógica de predicción y display)
+        pred_encoded = model.predict(X_predict)
         pred_decoded = labelencoder.inverse_transform(pred_encoded)[0]
 
-        # 7. Mostrar Resultado
         st.success('✅ Predicción Exitosa')
         st.metric(
-            label="Estado Físico Predicho",
+            label="Estado Físico Predicho", 
             value=f"El cultivo se encuentra en estado: **{pred_decoded}**"
         )
-
+        
     except Exception as e:
-        st.error(f"Error al realizar la predicción. Asegúrate de que el pre-procesamiento coincida con el modelo: {e}")
-        st.dataframe(X_predict)
+        # El error NameError: name 'X_predict' is not defined se solucionará
+        # porque X_predict se definirá si el ValueError se resuelve.
+        st.error(f"Error al realizar la predicción: {e}")
+        # Muestra el DataFrame antes de la predicción si falla.
+        # st.dataframe(X_predict)
+
 
 #Se realiza la preparación debe ser igual al aprendizaje
 #data_preparada=data.copy()
